@@ -1,0 +1,34 @@
+set -e
+tar -xvf ruby/yaml-0.1.5.tar.gz
+(
+  set -e
+  cd yaml-0.1.5
+  ./configure --prefix=${BOSH_INSTALL_TARGET}
+  make -j 3
+  make install
+  ldconfig
+)
+set -e
+tar -xvf ruby/ruby-2.0.0-p481.tar.gz
+(
+  set -e
+  cd ruby-2.0.0-p481
+  LDFLAGS="-Wl,-rpath -Wl,${BOSH_INSTALL_TARGET}" ./configure --prefix=${BOSH_INSTALL_TARGET} --disable-install-doc --with-opt-dir=${BOSH_INSTALL_TARGET}
+  make
+  make install
+)
+set -e
+tar -xvf ruby/rubygems-2.1.11.tgz
+(
+  set -e
+  cd rubygems-2.1.11
+  ${BOSH_INSTALL_TARGET}/bin/ruby setup.rb
+
+  if [[ $? != 0 ]] ; then
+    echo "Cannot install rubygems"
+    exit 1
+  fi
+)
+
+set -e
+${BOSH_INSTALL_TARGET}/bin/gem install ruby/bundler-1.3.5.gem --no-ri --no-rdoc
